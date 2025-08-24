@@ -1,4 +1,6 @@
-# Getting Started with Create React App
+#This is a kind of social plus interactive platform for the Researchers. Where they can connect share and do many other stuffs with other Researchers.
+
+
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
