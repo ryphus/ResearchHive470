@@ -34,6 +34,8 @@ function Login() {
       setMessage('Login successful!');
       setEmail('');
       setPassword('');
+      // After successful login
+      localStorage.setItem('user', JSON.stringify({ name: data.userName }));   //so ekhane user info save
       setTimeout(() => {
         navigate('/home');
       }, 1000); // Redirect after 1 second

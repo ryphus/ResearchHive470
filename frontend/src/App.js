@@ -1,8 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+
+
 import Login from './Login';
 import Home from './Home';
+//ekhane fearture gula
 import ResearcherProfile from './ResearcherProfile'; // still construction er modeddhe ase eita
+import Repository from './Repository'; // 
+import Forum from './Forum'; //  
 
 import {
   Container,
@@ -157,7 +162,9 @@ function App() {
         <Route path="/" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/profile" element={<ResearcherProfile />} />
+        <Route path="/profile" element={<ResearcherProfile />} /> 
+        <Route path="/repository" element={<Repository />} /> {/*   */}
+        <Route path="/forum" element={<Forum />} /> {/*   */}
       </Routes>
     </Router>
   );

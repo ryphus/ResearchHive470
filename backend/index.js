@@ -26,6 +26,14 @@ mongoose.connect('mongodb://localhost:27017/researchhive', {
 // Import and use auth routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+const repositoryRoutes = require('./routes/repository');
+app.use('/api/repository', repositoryRoutes);
+
+const forumRoutes = require('./routes/forum'); //bohut issue
+app.use('/api/forum', forumRoutes);
+
+
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 
 // Start server
 const PORT = process.env.PORT || 5000;

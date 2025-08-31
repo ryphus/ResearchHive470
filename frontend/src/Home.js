@@ -35,6 +35,26 @@ function Home() {
               Go to Researcher Profile
             </Button>
             <Button
+              variant="contained"
+              color="success"
+              size="large"
+              component={RouterLink}
+              to="/repository"
+              sx={{ fontWeight: 600, ml: 2 }}
+            >
+              Repository
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
+              size="large"
+              component={RouterLink}
+              to="/forum"
+              sx={{ fontWeight: 600, ml: 2 }}
+            >
+              Forum
+            </Button>
+            <Button
               variant="outlined"
               color="secondary"
               size="large"
