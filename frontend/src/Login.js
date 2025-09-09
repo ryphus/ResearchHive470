@@ -1,104 +1,80 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Paper,
-  Link,
+  Container, Box, Typography, TextField, Button, Paper, Alert
 } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+function Login({ onLogin }) {
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    setMessage('');
     setError('');
-
-    const response = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      setMessage('Login successful!');
-      setEmail('');
-      setPassword('');
-      // After successful login
-      localStorage.setItem('user', JSON.stringify({ name: data.userName }));   //so ekhane user info save
-      setTimeout(() => {
-        navigate('/home');
-      }, 1000); // Redirect after 1 second
-    } else {
-      setError(data.message || 'Login failed');
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      onLogin(data.user);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
     <Container maxWidth="sm">
-      <Box
-        mt={8}
-        component={Paper}
-        elevation={6}
-        p={4}
-        borderRadius={4}
-        sx={{
-          background: '#fff',
-        }}
-      >
-        <Typography variant="h4" fontWeight={700} align="center" gutterBottom>
-          ResearchHive Login
+      <Box mt={10} component={Paper} elevation={6} p={5} borderRadius={4} sx={{ background: '#fff' }}>
+        <Typography variant="h4" fontWeight={700} gutterBottom align="center">
+          Log In
         </Typography>
-        <form onSubmit={handleLogin}>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <form onSubmit={handleSubmit}>
           <TextField
-            label="Email"
+            name="email"
             type="email"
-            variant="outlined"
+            label="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
             fullWidth
             margin="normal"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            autoFocus
           />
           <TextField
-            label="Password"
+            name="password"
             type="password"
-            variant="outlined"
+            label="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
             fullWidth
             margin="normal"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
           />
           <Button
             type="submit"
             variant="contained"
             color="primary"
             fullWidth
-            size="large"
-            sx={{ mt: 2, mb: 1, py: 1.5, fontWeight: 600, fontSize: '1rem' }}
+            sx={{ mt: 2, fontWeight: 600 }}
           >
-            Login
+            Log In
           </Button>
-          <Box textAlign="center" mt={2}>
-            <RouterLink to="/" style={{ textDecoration: 'underline', color: '#1976d2', cursor: 'pointer' }}>
-              Don't have an account? Register
-            </RouterLink>
-          </Box>
-          {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
         </form>
+        <Box mt={2} textAlign="center">
+          Not a user?{' '}
+          <Button variant="text" onClick={() => navigate('/register')}>
+            Register here
+          </Button>
+        </Box>
       </Box>
     </Container>
   );

@@ -1,30 +1,62 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Notifications from './Notifications';
+import { AppBar, Toolbar, Typography, Button, Box, Divider } from '@mui/material';
 
-function Navbar() {
+function Navbar({ user, onLogout }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Clear session/token if needed
-    localStorage.removeItem('token');
-    navigate('/login');
+    if (onLogout) onLogout();
+    navigate('/');
   };
 
   return (
-    <AppBar position="static" color="default" elevation={1}>
-      <Toolbar>
-        <Typography variant="h6" component={RouterLink} to="/home" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', fontWeight: 700 }}>
-          ResearchHive
-        </Typography>
-        <Box>
-          <Button color="primary" component={RouterLink} to="/home" sx={{ mr: 2 }}>
-            Home
-          </Button>
-          <Button color="error" onClick={handleLogout}>
-            Logout
-          </Button>
+    <AppBar position="static" color="primary" elevation={2}>
+      <Toolbar sx={{ justifyContent: 'space-between', px: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            color="inherit"
+            sx={{ letterSpacing: 2, cursor: 'pointer' }}
+            onClick={() => navigate('/dashboard')}
+          >
+            Research Hive
+          </Typography>
+          <Divider orientation="vertical" flexItem sx={{ mx: 2, borderColor: '#fff' }} />
+          {user && (
+            <Typography
+              variant="body1"
+              color="inherit"
+              sx={{
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                px: 2,
+                py: 0.5,
+                bgcolor: 'rgba(255,255,255,0.15)',
+                borderRadius: 2,
+                letterSpacing: 1
+              }}
+            >
+              {user.name}
+            </Typography>
+          )}
         </Box>
+        {user && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Notifications user={user} />
+            <Button color="inherit" onClick={() => navigate('/dashboard')}>
+              Home
+            </Button>
+            <Button color="inherit" onClick={() => navigate('/profile')}>
+              Profile
+            </Button>
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
+          </Box>
+        )}
       </Toolbar>
     </AppBar>
   );

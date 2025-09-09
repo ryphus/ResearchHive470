@@ -1,29 +1,23 @@
 //auth.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const User = require('../models/user');
 
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    const { username, name, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    // Check if username exists
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
-      return res.status(400).json({ message: "Bhai onno username den, Eta arekjon diye felse :'(" });
-    }
-
-    // Check if email exists
+    // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'Email already in use' });
     }
 
     // Create new user
-    const user = new User({ username, name, email, password });
+    const user = new User({ name, email, password, username: name });
     await user.save();
-    res.status(201).json({ message: 'User registered successfully' });
+    res.json({ user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -31,20 +25,26 @@ router.post('/register', async (req, res) => {
 
 // Login route
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  // Find user by email
-  const user = await User.findOne({ email });
-  if (!user) {
-    // No user found with that email
-    return res.status(400).json({ message: 'User not found' });
+  try {
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check password
+    const isMatch = await user.comparePassword(password); // <-- FIXED HERE
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    res.json({ user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    console.error(err); // <-- Add this for debugging
+    res.status(500).json({ message: 'Server error' });
   }
-  // Check if password matches
-  if (user.password !== password) {
-    // Password is wrong
-    return res.status(400).json({ message: 'Wrong password' });
-  }
-  // Login successful!
-  res.json({ message: 'Login successful', user: { name: user.name, email: user.email } });
 });
 
 module.exports = router;

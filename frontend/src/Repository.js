@@ -17,8 +17,10 @@ import {
   Divider,
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+// import RepositoryCard from './RepositoryCard'; not using this
 
-function Repository() {
+
+function Repository({ user }) {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [tag, setTag] = useState('');
@@ -239,10 +241,32 @@ function Repository() {
                       <Button
                         color="error"
                         size="small"
-                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                        sx={{ textTransform: 'none', fontWeight: 600, mr: 1 }}
                         onClick={() => handleDelete(repo)}
                       >
                         Delete
+                      </Button>
+                      <Button
+                        variant={repo.bookmarked ? 'contained' : 'outlined'}
+                        color="warning"
+                        onClick={async () => {
+                          if (repo.bookmarked) {
+                            // Unbookmark
+                            await fetch(`http://localhost:5000/api/bookmarks/${repo.bookmarkId}`, { method: 'DELETE' });
+                            setRepos(repos.map(r => r._id === repo._id ? { ...r, bookmarked: false, bookmarkId: null } : r));
+                          } else {
+                            // Bookmark
+                            const res = await fetch('http://localhost:5000/api/bookmarks/', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ user: user.id, type: 'repository', item: repo._id })
+                            });
+                            const data = await res.json();
+                            setRepos(repos.map(r => r._id === repo._id ? { ...r, bookmarked: true, bookmarkId: data._id } : r));
+                          }
+                        }}
+                      >
+                        {repo.bookmarked ? 'Bookmarked' : 'Bookmark'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -257,6 +281,19 @@ function Repository() {
               </TableBody>
             </Table>
           </TableContainer>
+
+        
+          {/* <Divider sx={{ my: 3 }} />    //trial box banaisilam
+          <Typography variant="subtitle1" fontWeight={600} mb={2}>
+            All Repositories
+          </Typography>
+          <Box display="flex" flexDirection="column" gap={2}>
+            {repos.map(repo => (
+              <RepositoryCard key={repo._id} repo={repo} user={user} />
+            ))}
+          </Box> */}
+
+
         </Paper>
       </Box>
     </Container>

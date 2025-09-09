@@ -4,16 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
-
-// Define schema
-const repoSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  tags: [String],
-  filePath: String,
-  fileName: String,
-});
-const Repository = mongoose.model('Repository', repoSchema);
+const Repository = require('../models/Repository');
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -25,6 +16,12 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+
+// upload er folder create kore neya
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 // Get all repositories
 router.get('/', async (req, res) => {
@@ -61,5 +58,16 @@ router.delete('/:id', async (req, res) => {
   }
   res.json({ success: true });
 });
+
+// Get repository by ID ///bkrmk
+router.get('/:id', async (req, res) => {
+  try {
+    const repo = await Repository.findById(req.params.id);
+    if (!repo) return res.status(404).json({ message: 'Repository not found' });
+    res.json(repo);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching repository' });
+  }
+}); //bkrmk
 
 module.exports = router;

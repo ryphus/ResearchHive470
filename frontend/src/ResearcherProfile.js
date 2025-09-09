@@ -1,148 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Box,
-  Typography,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-} from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Box, Typography, TextField, Button, Paper, Alert, CircularProgress, Stack, Avatar } from '@mui/material';
 
-function ResearcherProfile() {
-  // 
-  const [bio, setBio] = useState('');
-  const [interests, setInterests] = useState('');
-  const [publications, setPublications] = useState('');
-  const [projects, setProjects] = useState('');
-  const [affiliations, setAffiliations] = useState('');
-  const [contact, setContact] = useState('');
+function ResearcherProfile({ user }) {
+  const [profile, setProfile] = useState({
+    name: '', bio: '', interests: '', publications: '', projects: '', affiliations: '', contact: ''
+  });
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState('');
+  const [error, setError] = useState('');
 
-  // local je storage ta ase
   useEffect(() => {
-    const savedProfile = JSON.parse(localStorage.getItem('researcherProfile'));
-    if (savedProfile) {
-      setBio(savedProfile.bio || '');
-      setInterests(savedProfile.interests || '');
-      setPublications(savedProfile.publications || '');
-      setProjects(savedProfile.projects || '');
-      setAffiliations(savedProfile.affiliations || '');
-      setContact(savedProfile.contact || '');
-    }
-  }, []);
+    if (!user) return;
+    setLoading(true);
+    fetch(`http://localhost:5000/api/user/profile/${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setProfile({
+          name: data.name || '',
+          bio: data.bio || '',
+          interests: data.interests || '',
+          publications: data.publications || '',
+          projects: data.projects || '',
+          affiliations: data.affiliations || '',
+          contact: data.contact || ''
+        });
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Failed to load profile');
+        setLoading(false);
+      });
+  }, [user]);
 
-  // Save profile to localStorage
-  const handleSave = (e) => {
-    e.preventDefault();
-    const profileData = { bio, interests, publications, projects, affiliations, contact };
-    localStorage.setItem('researcherProfile', JSON.stringify(profileData));
-    setEditMode(false);
+  const handleChange = e => {
+    setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setMsg('');
+    setError('');
+    try {
+      const res = await fetch(`http://localhost:5000/api/user/profile/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Error updating profile');
+        return;
+      }
+      setProfile({
+        name: data.name || '',
+        bio: data.bio || '',
+        interests: data.interests || '',
+        publications: data.publications || '',
+        projects: data.projects || '',
+        affiliations: data.affiliations || '',
+        contact: data.contact || ''
+      });
+      setMsg('Profile updated!');
+      setEditMode(false);
+    } catch {
+      setError('Network error');
+    }
+  };
+
+  if (loading) return <Box display="flex" justifyContent="center" mt={6}><CircularProgress /></Box>;
+
   return (
-    <Container maxWidth="md">
-      <Box mt={8} component={Paper} elevation={6} p={6} borderRadius={4} sx={{ background: '#fff' }}>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Typography variant="h4" fontWeight={700} gutterBottom>
-              Researcher Profile
+    <Box maxWidth="sm" mx="auto" mt={6}>
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
+        <Box display="flex" alignItems="center" mb={3}>
+          <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
+            {profile.name ? profile.name[0].toUpperCase() : ''}
+          </Avatar>
+          <Box>
+            <Typography variant="h5" fontWeight={700}>
+              {profile.name || user.name}
             </Typography>
-          </Grid>
-          <Grid item>
-            <Button
-              variant="outlined"
-              color="primary"
-              component={RouterLink}
-              to="/home"
-              sx={{ fontWeight: 600 }}
-            >
-              Home
-            </Button>
-          </Grid>
-        </Grid>
+            <Typography variant="body2" color="text.secondary">
+              {user.email}
+            </Typography>
+          </Box>
+        </Box>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {msg && <Alert severity="success" sx={{ mb: 2 }}>{msg}</Alert>}
         {editMode ? (
           <form onSubmit={handleSave}>
-            <TextField
-              label="Biography"
-              multiline
-              rows={3}
-              fullWidth
-              margin="normal"
-              value={bio}
-              onChange={e => setBio(e.target.value)}
-            />
-            <TextField
-              label="Research Interests"
-              fullWidth
-              margin="normal"
-              value={interests}
-              onChange={e => setInterests(e.target.value)}
-            />
-            <TextField
-              label="Publications"
-              fullWidth
-              margin="normal"
-              value={publications}
-              onChange={e => setPublications(e.target.value)}
-            />
-            <TextField
-              label="Projects"
-              fullWidth
-              margin="normal"
-              value={projects}
-              onChange={e => setProjects(e.target.value)}
-            />
-            <TextField
-              label="Affiliations"
-              fullWidth
-              margin="normal"
-              value={affiliations}
-              onChange={e => setAffiliations(e.target.value)}
-            />
-            <TextField
-              label="Contact Info"
-              fullWidth
-              margin="normal"
-              value={contact}
-              onChange={e => setContact(e.target.value)}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ mt: 3, fontWeight: 600 }}
-            >
-              Save Profile
-            </Button>
+            <Stack spacing={2}>
+              <TextField label="Name" name="name" value={profile.name} onChange={handleChange} required />
+              <TextField label="Bio" name="bio" value={profile.bio} onChange={handleChange} multiline rows={2} />
+              <TextField label="Interests" name="interests" value={profile.interests} onChange={handleChange} />
+              <TextField label="Publications" name="publications" value={profile.publications} onChange={handleChange} />
+              <TextField label="Projects" name="projects" value={profile.projects} onChange={handleChange} />
+              <TextField label="Affiliations" name="affiliations" value={profile.affiliations} onChange={handleChange} />
+              <TextField label="Contact" name="contact" value={profile.contact} onChange={handleChange} />
+              <Stack direction="row" spacing={2}>
+                <Button type="submit" variant="contained" color="primary">Save</Button>
+                <Button variant="outlined" onClick={() => setEditMode(false)}>Cancel</Button>
+              </Stack>
+            </Stack>
           </form>
         ) : (
           <Box>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Biography:</Typography>
-            <Typography variant="body1">{bio || <span style={{color:'#aaa'}}>No biography added.</span>}</Typography>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Research Interests:</Typography>
-            <Typography variant="body1">{interests || <span style={{color:'#aaa'}}>No interests added.</span>}</Typography>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Publications:</Typography>
-            <Typography variant="body1">{publications || <span style={{color:'#aaa'}}>No publications added.</span>}</Typography>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Projects:</Typography>
-            <Typography variant="body1">{projects || <span style={{color:'#aaa'}}>No projects added.</span>}</Typography>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Affiliations:</Typography>
-            <Typography variant="body1">{affiliations || <span style={{color:'#aaa'}}>No affiliations added.</span>}</Typography>
-            <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600 }}>Contact Info:</Typography>
-            <Typography variant="body1">{contact || <span style={{color:'#aaa'}}>No contact info added.</span>}</Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ mt: 4, fontWeight: 600 }}
-              onClick={() => setEditMode(true)}
-            >
+            <Typography><b>Bio:</b> {profile.bio}</Typography>
+            <Typography><b>Interests:</b> {profile.interests}</Typography>
+            <Typography><b>Publications:</b> {profile.publications}</Typography>
+            <Typography><b>Projects:</b> {profile.projects}</Typography>
+            <Typography><b>Affiliations:</b> {profile.affiliations}</Typography>
+            <Typography><b>Contact:</b> {profile.contact}</Typography>
+            <Button variant="contained" sx={{ mt: 2 }} onClick={() => setEditMode(true)}>
               Edit Profile
             </Button>
           </Box>
         )}
-      </Box>
-    </Container>
+      </Paper>
+    </Box>
   );
 }
 
